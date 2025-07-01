@@ -1,44 +1,65 @@
-version: "3.9"
+version: '3.8'
+
 services:
   jenkins:
     image: jenkins/jenkins:lts
+    container_name: jenkins
     ports:
       - "8080:8080"
+      - "50000:50000"
     volumes:
-      - ./jenkins_data:/var/jenkins_home
-    restart: always
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - devnet
 
   n8n:
     image: n8nio/n8n
+    container_name: n8n
     ports:
       - "5678:5678"
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=${N8N_USER}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASS}
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
     volumes:
-      - ./n8n_data:/home/node/.n8n
-    restart: always
+      - n8n_data:/home/node/.n8n
+    networks:
+      - devnet
 
   fastapi:
     build: ./fastapi
+    container_name: fastapi
     ports:
-      - "9000:9000"
-    restart: always
+      - "8000:8000"
+    networks:
+      - devnet
 
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus_data:/prometheus
-    restart: always
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - devnet
 
   grafana:
     image: grafana/grafana
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana_data:/var/lib/grafana
-    restart: always
+      - grafana_data:/var/lib/grafana
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  grafana_data:
+  n8n_data:
 
